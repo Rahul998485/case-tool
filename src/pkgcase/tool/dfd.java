@@ -41,13 +41,13 @@ public class dfd extends JPanel implements Serializable{
     shapes = new ArrayList<Symbol>();
     dataDic = new ArrayList<>();
     }
-    
     /***********************Main components************************/
     String name;
     ArrayList <Symbol> shapes;
     ArrayList <Data> dataDic;
     
     /***************************************************************/
+    int sel=-1;
     
     void addentity(int x, int y, int width, int height, String name) {
         Entity entity = new Entity(x,y,width,height,name);
@@ -70,11 +70,9 @@ public class dfd extends JPanel implements Serializable{
         int i;
         for(i=0; i<shapes.size(); i++) {
             Symbol s = shapes.get(i);
-            
+            if(i==sel) s.draw(g2, 1);
             //Draw Shape
-            s.draw(g2);
-            
-            //Draw String
+            else s.draw(g2,0);
         }
     }
     void updateDic () {
@@ -90,7 +88,23 @@ public class dfd extends JPanel implements Serializable{
             }
         }
     }
-
+    void addtochild(dfd p, Symbol ps, dfd c) {
+        FlowArrow a;
+        Symbol temp;
+        for(int i=0; i<p.shapes.size(); i++) {
+            Symbol s = p.shapes.get(i);
+            if(s.gettype().equals("flowarrow")) {
+                a = (FlowArrow) s;
+                if(a.head == ps) {
+                    
+                    c.shapes.add(a.tail.getcopy());
+                }
+                else if (a.tail==ps) {
+                    c.shapes.add(a.head.getcopy());
+                }
+            }
+        }    
+    }
     /*
     private void printSimpleString(String s, int width, int XPos, int YPos){  
             int stringLen = (int)  

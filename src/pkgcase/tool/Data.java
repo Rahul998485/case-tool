@@ -6,11 +6,13 @@
 
 package pkgcase.tool;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Aseem
  */
-public class Data {
+public class Data implements Serializable{
     Data (String name, String type, String description) {
         this.name = name;
         this.type = type;

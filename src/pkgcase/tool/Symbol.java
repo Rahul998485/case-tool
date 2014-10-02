@@ -21,16 +21,12 @@ import java.io.Serializable;
 public abstract class Symbol implements Serializable {
     protected String name;
     protected String description;
-    
     protected String id;
-    /*Symbol(Symbol s) {
-        this.name = s.name;
-        this.description = s.description;
-        this.id = s.id;
-    }*/
-    void draw (Graphics2D g) {};
+    void draw (Graphics2D g, int sel) {};
     void move (int x, int y) {};
     void resize (int x, int y) {};
+    Symbol getcopy(){return null;
+}
     int getHeight () {
         return (int) this.getBounds2D().getHeight();
     }
@@ -50,10 +46,7 @@ public abstract class Symbol implements Serializable {
         return null;
     };
     boolean isdrawn () {
-        if(this.getHeight()>0 && this.getWidth()>0) {
-            return true; 
-        }
-        else return false;
+        return this.getHeight()>10 && this.getWidth()>10;
     }
     String gettype () {
         return "";

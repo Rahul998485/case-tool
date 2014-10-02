@@ -6,6 +6,7 @@
 
 package pkgcase.tool;
 
+import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -22,20 +23,32 @@ public class Bubble extends Symbol {
     Line2D.Double l;
     String location;
     dfd d;
+    Module m;
+    static int count = 0;
     Bubble(int r, int x, int y, String name){
         c = new Circle(r,x,y);
         this.name = name;
         System.out.println("New Bubble Created");
-        id = "id";
+        id = ""+ (count+1);
+        count++;
         d = new dfd(name);
         l = new Line2D.Double();
+    }   
+    Symbol getcopy () {
+        return new Bubble (this);
     }
     Bubble (Bubble b) {
+        this.name = b.name;
+        this.description = b.description;
+        this.id = b.id;
         this.c = b.c;
         this.l = b.l;
         this.location = b.location;
-    }
-    void draw (Graphics2D g) {
+        this.d = b.d;
+    }    
+    void draw (Graphics2D g, int sel) {
+        if (sel==1) g.setPaint(Color.BLACK);
+        else g.setPaint(Color.BLUE);
         g.draw(c);
         Point p = new Point();
         FontMetrics fm = g.getFontMetrics();

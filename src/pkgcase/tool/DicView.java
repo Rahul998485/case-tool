@@ -53,6 +53,7 @@ public class DicView extends javax.swing.JFrame {
         dic = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Data Dictionary");
 
         dic.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {

@@ -41,6 +41,11 @@ class GraphicDragController extends MouseInputAdapter {
     
     //For constructing new arrow
     FlowArrow tempa;
+    public void mouseMoved(MouseEvent e) {
+        sel = getsymbolindex(e.getPoint());
+        component.sel = sel;
+        component.repaint();
+    }
     public void mouseClicked(MouseEvent e) {
         
         sel = getsymbolindex(p);
@@ -51,7 +56,15 @@ class GraphicDragController extends MouseInputAdapter {
         }
         if (e.getClickCount() == 2){
             sel = getsymbolindex(e.getPoint());
-            if(Global.mode!=11) {/*Global.mode==5*/
+            if(Global.mode ==11 && component.shapes.get(sel).gettype().equals("bubble")) {
+                dfd d = ((Bubble)component.shapes.get(sel)).d;
+                d.name = component.shapes.get(sel).name;
+                GraphicDragController gdadc = new GraphicDragController(d);
+                //if(d.shapes.size()==0) d.addtochild(component, component.shapes.get(sel), d);
+                Global.n.tabs.add(d.name, d);
+                Global.n.tabs.setSelectedIndex(Global.n.tabs.getTabCount()-1);
+            }
+            else {/*Global.mode==5*/
                 if(sel>=0) {
                     Symbol s = component.shapes.get(sel);
                     System.out.println("double clicked "+sel);
@@ -64,28 +77,28 @@ class GraphicDragController extends MouseInputAdapter {
                     }
                 }
             }
-            else if(Global.mode==11 && component.shapes.get(sel).gettype().equals("bubble")) {
-                dfd d = ((Bubble)component.shapes.get(sel)).d;
-                Global.n.tabs.add(d.name, d);
-                Global.n.tabs.setSelectedIndex(Global.n.tabs.getTabCount()-1);
-            }
         }
         if(Global.mode==21) {
             
             sel = getsymbolindex(e.getPoint());
-            int ans = JOptionPane.showConfirmDialog(component, "Are you sure you want to delete this symbol and the connected arrows?");
-            
+            int ans;
+            if(component.shapes.get(sel).gettype().equals("flowarrow")) {
+                ans = JOptionPane.showConfirmDialog(component, "Are you sure you want to delete "+component.shapes.get(sel).name +". The data flow arrow and the corresponding data name will get deleted.?");
+            }
+            else {
+                ans = JOptionPane.showConfirmDialog(component, "Are you sure you want to delete "+component.shapes.get(sel).name +" and the connected arrows?");
+            }
             if(ans == JOptionPane.YES_OPTION) {
-            deletearrow(component.shapes.get(sel));
-            component.shapes.remove(sel);
-            component.repaint();
+                deletearrow(component.shapes.get(sel));
+                component.shapes.remove(sel);
+                component.repaint();
             }
         }
     }
     public void mousePressed(MouseEvent e) {
         sel=-1;
         p = e.getPoint();
-        if(Global.mode !=4) sel = getsymbolindex(p);
+        if(Global.mode !=4 && Global.mode !=6) sel = getsymbolindex(p);
         if(sel>=0) {
             Symbol r =  component.shapes.get(sel);
             offset.x = (int) (p.x - r.getBounds2D().getX());
@@ -111,6 +124,14 @@ class GraphicDragController extends MouseInputAdapter {
                     temp = new FlowArrow(p, p, "Arrow");
                     component.shapes.add(temp);
                     break;
+                case 6:
+                    temp = new CtrlArrow(p, p, "Arrow");
+                    component.shapes.add(temp);
+                    break;
+                case 7:
+                    temp = new Module(p.x,p.y,0,0,"Module");
+                    component.shapes.add(temp);
+                    break;
             }
             dragging = true;
             constructing = true;
@@ -125,13 +146,20 @@ class GraphicDragController extends MouseInputAdapter {
             if (temp.isdrawn()) {
                 
                 //Validity of arrow
-                if(Global.mode ==4) {
+                if(Global.mode ==4 || Global.mode ==6) {
                     int c1,c2;
                     int max = component.shapes.size()-2;
                     c1 = getsymbolindex(p);
                     c2 = getsymbolindex(q);
-                    if(c1>=0 && c2>=0 && c1!=c2 && c1<=max && c2<=max ) {
+                    if(c1>=0 && c2>=0 && c1!=c2 && c1<=max && c2<=max && Global.mode ==4) {
                         FlowArrow a = (FlowArrow) temp;
+                        a.setterminals(component.shapes.get(c2), component.shapes.get(c1));
+                        a.refactor();;
+                        Edit edit = new Edit (component.shapes.get(component.shapes.size()-1));
+                        edit.setVisible(true);
+                    }
+                    else if(c1>=0 && c2>=0 && c1!=c2 && c1<=max && c2<=max && Global.mode ==6) {
+                        CtrlArrow a = (CtrlArrow) temp;
                         a.setterminals(component.shapes.get(c2), component.shapes.get(c1));
                         a.refactor();;
                         Edit edit = new Edit (component.shapes.get(component.shapes.size()-1));
@@ -144,7 +172,10 @@ class GraphicDragController extends MouseInputAdapter {
                         return;
                     }
                 }
-                
+                else {
+                    Edit edit = new Edit (component.shapes.get(component.shapes.size()-1));
+                    edit.setVisible(true);
+                }
                 System.out.println("New " + temp.getClass().toString() + " drawn");
                 System.out.println("Count: " + component.shapes.size());
             }
@@ -164,7 +195,6 @@ class GraphicDragController extends MouseInputAdapter {
     public void mouseDragged(MouseEvent e) {
         if (dragging) {
             if(!constructing){
-                System.out.println("not constructing");
                 int x = e.getX() - offset.x;
                 int y = e.getY() - offset.y;
                 component.shapes.get(sel).move(x, y);
@@ -180,6 +210,10 @@ class GraphicDragController extends MouseInputAdapter {
                 case 3:
                     temp.resize(e.getX() - p.x,e.getY() - p.y);
                 case 4:
+                    temp.resize(e.getX() - p.x,e.getY() - p.y);
+                case 6:
+                    temp.resize(e.getX() - p.x,e.getY() - p.y);
+                case 7:
                     temp.resize(e.getX() - p.x,e.getY() - p.y);
             }
             }
@@ -208,7 +242,16 @@ class GraphicDragController extends MouseInputAdapter {
                 else if (a.tail==curr) a.movetail(x,y);
             }
         }    
-        System.out.println("arrow adjusted");
+        CtrlArrow b;
+        for(int i=0; i<component.shapes.size(); i++) {
+            Symbol s = component.shapes.get(i);
+            if(s.gettype().equals("ctrlarrow")) {
+                b = (CtrlArrow) s;
+                if(b.head == curr) b.movehead(x, y);
+                else if (b.tail==curr) b.movetail(x,y);
+            }
+        }
+        System.out.println("Arrows adjusted");
     }
     void deletearrow(Symbol curr) {
         FlowArrow a;
